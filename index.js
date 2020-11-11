@@ -1,4 +1,4 @@
-var createHash = require('create-hash')
+const createHash = require('create-hash')
 
 /**
  * @param {Buffer} buf1
@@ -6,7 +6,7 @@ var createHash = require('create-hash')
  * @return {Buffer}
  */
 function hash256 (buf1, buf2) {
-  var buf = createHash('sha256').update(buf1).update(buf2).digest()
+  const buf = createHash('sha256').update(buf1).update(buf2).digest()
   return createHash('sha256').update(buf).digest()
 }
 
@@ -23,9 +23,9 @@ function calcTreeWidth (numTransactions, height) {
  * @return {number[]}
  */
 function bits2bytes (bits) {
-  var bytes = []
-  for (var i = 0; 8 * i < bits.length; ++i) {
-    for (var j = 0; j < 8; ++j) {
+  const bytes = []
+  for (let i = 0; 8 * i < bits.length; ++i) {
+    for (let j = 0; j < 8; ++j) {
       bytes[i] |= bits[8 * i + j] << j
     }
   }
@@ -38,9 +38,9 @@ function bits2bytes (bits) {
  * @return {number[]}
  */
 function bytes2bits (bytes) {
-  var bits = []
-  for (var i = 0; i < bytes.length; ++i) {
-    for (var j = 0; j < 8; ++j) {
+  const bits = []
+  for (let i = 0; i < bytes.length; ++i) {
+    for (let j = 0; j < 8; ++j) {
       bits.push((bytes[i] >>> j) & 0x01)
     }
   }
@@ -60,15 +60,15 @@ function bytes2bits (bytes) {
  * @return {partialMerkleTree}
  */
 module.exports.build = function (data) {
-  var numTransactions = data.hashes.length
-  var include = data.include.map(function (b) { return b.toString('hex') })
-  var match = new Array(numTransactions)
-  for (var i = 0; i < match.length; ++i) {
+  const numTransactions = data.hashes.length
+  const include = data.include.map(function (b) { return b.toString('hex') })
+  const match = new Array(numTransactions)
+  for (let i = 0; i < match.length; ++i) {
     match[i] = include.indexOf(data.hashes[i].toString('hex')) === -1 ? 0 : 1
   }
 
-  var bits = []
-  var hashes = []
+  const bits = []
+  const hashes = []
 
   /**
    * @param {number} height
@@ -80,7 +80,7 @@ module.exports.build = function (data) {
       return data.hashes[pos]
     }
 
-    var left = getHash(height - 1, pos * 2)
+    const left = getHash(height - 1, pos * 2)
     if (pos * 2 + 1 < calcTreeWidth(numTransactions, height - 1)) {
       return hash256(left, getHash(height - 1, pos * 2 + 1))
     }
@@ -93,8 +93,8 @@ module.exports.build = function (data) {
    * @param {number} pos
    */
   function build (height, pos) {
-    var parentOfMatch = 0
-    for (var p = pos << height, m = (pos + 1) << height; p < m && p < numTransactions; ++p) {
+    let parentOfMatch = 0
+    for (let p = pos << height, m = (pos + 1) << height; p < m && p < numTransactions; ++p) {
       parentOfMatch |= match[p]
     }
     bits.push(parentOfMatch)
@@ -109,7 +109,7 @@ module.exports.build = function (data) {
     }
   }
 
-  var height = Math.ceil(Math.log2(data.hashes.length))
+  const height = Math.ceil(Math.log2(data.hashes.length))
   build(height, 0)
 
   return {
@@ -125,10 +125,10 @@ module.exports.build = function (data) {
  * @return {Buffer[]}
  */
 module.exports.verify = function (data) {
-  var hashes = []
-  var bits = bytes2bits(data.flags)
-  var bitsUsed = 0
-  var hashUsed = 0
+  const hashes = []
+  const bits = bytes2bits(data.flags)
+  let bitsUsed = 0
+  let hashUsed = 0
 
   /**
    * @param {number} height
@@ -136,9 +136,9 @@ module.exports.verify = function (data) {
    * @return {Buffer}
    */
   function extract (height, pos) {
-    var parentOfMatch = bits[bitsUsed++]
+    const parentOfMatch = bits[bitsUsed++]
     if (height === 0 || parentOfMatch === 0) {
-      var hash = data.hashes[hashUsed++]
+      const hash = data.hashes[hashUsed++]
       if (height === 0 && parentOfMatch) {
         hashes.push(hash)
       }
@@ -146,9 +146,9 @@ module.exports.verify = function (data) {
       return hash
     }
 
-    var left = extract(height - 1, pos * 2)
+    const left = extract(height - 1, pos * 2)
     if (pos * 2 + 1 < calcTreeWidth(data.numTransactions, height - 1)) {
-      var right = extract(height - 1, pos * 2 + 1)
+      const right = extract(height - 1, pos * 2 + 1)
       if (left.equals(right)) {
         throw new Error('Merkle child hashes are equivalent (' +
           left.toString('hex') + ')')
@@ -160,9 +160,9 @@ module.exports.verify = function (data) {
     return hash256(left, left)
   }
 
-  var merkleRoot = extract(Math.ceil(Math.log2(data.numTransactions)), 0)
+  const merkleRoot = extract(Math.ceil(Math.log2(data.numTransactions)), 0)
 
-  var flagByte = Math.floor(bitsUsed / 8)
+  const flagByte = Math.floor(bitsUsed / 8)
   if (flagByte + 1 < data.flags.length ||
       data.flags[flagByte] > (1 << bitsUsed % 8)) {
     throw new Error('Tree did not consume all flag bits')

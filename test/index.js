@@ -1,20 +1,20 @@
-var test = require('tape')
-var merkleTree = require('../')
+const test = require('tape')
+const merkleTree = require('../')
 
-var util = require('./util')
-var fixtures = require('./fixtures.json')
+const util = require('./util')
+const fixtures = require('./fixtures.json')
 
 test('valid', function (t) {
   fixtures.valid.forEach(function (fixture) {
     t.test(fixture.name, function (t) {
-      var data = {
+      const data = {
         hashes: util.strings2buffers(fixture.txids),
         include: util.strings2buffers(fixture.include),
         merkleRoot: util.string2buffer(fixture.merkleRoot)
       }
 
-      var pmt = merkleTree.build(data)
-      var hashes = merkleTree.verify(pmt)
+      const pmt = merkleTree.build(data)
+      const hashes = merkleTree.verify(pmt)
 
       t.deepEqual(fixture.include, util.buffers2string(hashes))
       t.end()
@@ -30,7 +30,7 @@ test('valid verify()', function (t) {
       data.hashes = util.strings2buffers(data.hashes)
       data.merkleRoot = util.string2buffer(data.merkleRoot)
 
-      var hashes = merkleTree.verify(data)
+      const hashes = merkleTree.verify(data)
 
       t.deepEqual(data.include, util.buffers2string(hashes))
       t.end()
@@ -43,11 +43,11 @@ test('valid verify()', function (t) {
 test('invalid', function (t) {
   fixtures.invalid.forEach(function (fixture) {
     t.test(fixture.name, function (t) {
-      var pmt = {
+      const pmt = {
         flags: fixture.flags,
-        hashes: fixture.hashes.map(function (s) { return new Buffer(s, 'hex') }),
+        hashes: fixture.hashes.map(function (s) { return Buffer.from(s, 'hex') }),
         numTransactions: fixture.numTransactions,
-        merkleRoot: new Buffer(fixture.merkleRoot, 'hex')
+        merkleRoot: Buffer.from(fixture.merkleRoot, 'hex')
       }
 
       t.throws(function () {
